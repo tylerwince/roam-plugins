@@ -132,7 +132,7 @@ function createButton() {
       spanOne.appendChild(spanTwo);
       var outboundUnlinkedRefs = document.createElement('span');
       outboundUnlinkedRefs.id = 'outboundUnlinkedRefs';
-      outboundUnlinkedRefs.classList.add('bp3-icon-search', 'bp3-button', 'bp3-minimal');
+      outboundUnlinkedRefs.classList.add('bp3-icon-search-around', 'bp3-button', 'bp3-minimal');
       spanTwo.appendChild(outboundUnlinkedRefs);
       var roamTopbar = document.getElementsByClassName("roam-topbar");
       roamTopbar[0].childNodes[0].appendChild(spanOne);
