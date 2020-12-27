@@ -123,23 +123,20 @@ function addUnderlineSpanWrapper(node, pages) {
     }
     return false
 }
-
-function addButton() {
-      const el = document.createElement("div");
-      el.id = "find-unlinked-references-button";
-      el.onclick = () => {
-        traceBlocksOnPage()
-      };
-      el.appendChild(icon());
-      const spacer = document.createElement("div");
-      spacer.setAttribute("style", "flex: 0 0 4px");
-      el.setAttribute(
-        "style",
-        "height: 24px; width: 24px; text-align: center; color: #5C7080; cursor: pointer"
-      );
-
-      document.querySelector(".roam-topbar .flex-h-box").appendChild(spacer);
-      document.querySelector(".roam-topbar .flex-h-box").appendChild(el);
-    }
-
-addButton()
+  
+function createButton() {
+      var spanOne = document.createElement('span');
+      spanOne.classList.add('bp3-popover-wrapper');
+      var spanTwo = document.createElement('span');
+      spanTwo.classList.add('bp3-popover-target');
+      spanOne.appendChild(spanTwo);
+      var outboundUnlinkedRefs = document.createElement('span');
+      outboundUnlinkedRefs.id = 'outboundUnlinkedRefs';
+      outboundUnlinkedRefs.classList.add('bp3-icon-search', 'bp3-button', 'bp3-minimal');
+      spanTwo.appendChild(outboundUnlinkedRefs);
+      var roamTopbar = document.getElementsByClassName("roam-topbar");
+      roamTopbar[0].childNodes[0].appendChild(spanOne);
+      outboundUnlinkedRefs.onclick = traceBlocksOnPage;
+}
+  
+createButton()
