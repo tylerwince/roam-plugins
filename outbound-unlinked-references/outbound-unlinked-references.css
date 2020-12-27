@@ -1,0 +1,5 @@
+[recommend="underline"] {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted gray;
+}
