@@ -10,7 +10,7 @@ function getAllPages() {
 
 function pageTaggedInParent(node, page) {
     parent = node.parentElement
-    while (parent.classList.contains("rm-level-0") == false) {
+    while (parent.classList.contains("roam-article") == false) {
         parent = parent.parentElement
         if (parent.hasAttribute("data-page-links")) {
             linkedPages = JSON.parse(parent.getAttribute("data-page-links"))
