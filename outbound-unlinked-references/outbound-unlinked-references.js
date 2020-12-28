@@ -80,18 +80,18 @@ function addUnderlineSpanWrapper(node, pages) {
                 firstCharAfterMatch = node.textContent.slice(start).substr(pages[l].length)[0]
                 linkText = node.textContent.slice(start, end)
                 afterLinkText = node.textContent.slice(end)
-                // truncate existing text node
-                node.textContent = beforeLinkText
                 // create span with page name
                 matchSpan = document.createElement("span")
                 matchSpan.setAttribute("recommend", "underline")
                 if (linkText != pages[l]) {
                     matchSpan.classList.add("fuzzy-word-match")
                 }
-                if (firstCharAfterMatch != " " || firstCharBeforeMatch != " ") {
+                if ((firstCharAfterMatch != " " && end != node.textContent.length) || (firstCharBeforeMatch != " " && start != 0)) {
                     matchSpan.classList.add("partial-word-match")
                 }
                 matchSpan.innerText = linkText
+                // truncate existing text node
+                node.textContent = beforeLinkText
                 // add that span after the text node
                 node.parentNode.insertBefore(matchSpan, node.nextSibling)
                 // create a text node with the remainder text
