@@ -76,9 +76,7 @@ function addUnderlineSpanWrapper(node, pages) {
                 start = node.textContent.toLowerCase().indexOf(pages[l].toLowerCase())
                 end = start + pages[l].length
                 beforeLinkText = node.textContent.slice(0, start)
-                matchingWord = node.textContent.slice(start)
-                matchingWord = matchingWord.substr(0, matchingWord.indexOf(" "))
-                console.log(matchingWord)
+                firstCharAfterMatch = node.textContent.slice(start).substr(pages[l].length)[0]
                 linkText = node.textContent.slice(start, end)
                 afterLinkText = node.textContent.slice(end)
                 // truncate existing text node
@@ -87,7 +85,10 @@ function addUnderlineSpanWrapper(node, pages) {
                 matchSpan = document.createElement("span")
                 matchSpan.setAttribute("recommend", "underline")
                 if (linkText != pages[l]) {
-                    matchSpan.classList.add("fuzzy")
+                    matchSpan.classList.add("fuzzy-word-match")
+                }
+                if (firstCharAfterMatch != " ") {
+                    matchSpan.classList.add("partial-word-match")
                 }
                 matchSpan.innerText = linkText
                 // add that span after the text node
