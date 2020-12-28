@@ -1,5 +1,9 @@
 [recommend="underline"] {
-  position: relative;
-  display: inline-block;
-  border-bottom: 1px dotted gray;
+  text-decoration: underline;
+  text-decoration-color: black;
+  text-decoration-style: dotted;
+}
+
+.fuzzy[recommend="underline"] {
+  text-decoration-color:  gray !important;
 }
