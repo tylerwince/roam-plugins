@@ -14,7 +14,6 @@ function pageTaggedInParent(node, page) {
         parent = parent.parentElement
         if (parent.hasAttribute("data-page-links")) {
             linkedPages = JSON.parse(parent.getAttribute("data-page-links"))
-            console.log(linkedPages)
             if (linkedPages.includes(page)) {
                 return true
             }
@@ -105,7 +104,6 @@ function addUnderlineSpanWrapper(node, pages) {
                     matchSpan.classList.add("partial-word-match")
                 }
                 if (pageTaggedInParent(node, pages[l]) == true) {
-                    console.log(node, pages[l])
                     matchSpan.classList.add("redundant-word-match")
                 }
                 matchSpan.innerText = linkText
