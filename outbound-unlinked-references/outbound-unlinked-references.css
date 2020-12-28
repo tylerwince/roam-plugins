@@ -4,6 +4,9 @@
   text-decoration-style: dotted;
 }
 
-.fuzzy[recommend="underline"] {
+.fuzzy-word-match[recommend="underline"] {
   text-decoration-color:  gray !important;
+}
+.partial-word-match[recommend="underline"] {
+  text-decoration-color:  lightgray !important;
 }
