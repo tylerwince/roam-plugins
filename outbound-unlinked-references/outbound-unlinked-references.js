@@ -76,6 +76,7 @@ function addUnderlineSpanWrapper(node, pages) {
                 start = node.textContent.toLowerCase().indexOf(pages[l].toLowerCase())
                 end = start + pages[l].length
                 beforeLinkText = node.textContent.slice(0, start)
+                firstCharBeforeMatch = node.textContent.slice(start - 1)[0]
                 firstCharAfterMatch = node.textContent.slice(start).substr(pages[l].length)[0]
                 linkText = node.textContent.slice(start, end)
                 afterLinkText = node.textContent.slice(end)
@@ -87,7 +88,7 @@ function addUnderlineSpanWrapper(node, pages) {
                 if (linkText != pages[l]) {
                     matchSpan.classList.add("fuzzy-word-match")
                 }
-                if (firstCharAfterMatch != " ") {
+                if (firstCharAfterMatch != " " || firstCharBeforeMatch != " ") {
                     matchSpan.classList.add("partial-word-match")
                 }
                 matchSpan.innerText = linkText
