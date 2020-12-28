@@ -52,6 +52,10 @@ function lookForMatchingBlocks(blocks, pages) {
 }
 
 function traceBlocksOnPage() {
+    if (document.title == "roam/js") {
+      console.log("DON'T DO IT ON THIS PAGE")
+      return
+    }
     // blocks on the page where the button is clicked
     // get all pages in the graph
     let pages = getAllPages();
@@ -64,24 +68,28 @@ function traceBlocksOnPage() {
 }
 
 function addUnderlineSpanWrapper(node, pages) {
-    console.log(node)
     try {
-
         for (l = 0; l < pages.length; l++) {
-            if (node.textContent.includes(pages[l])) {
+            if (node.textContent.toLowerCase().includes(pages[l].toLowerCase())) {
                 // iterate over the childNodes and do stuff on childNodes that 
                 // don't have the data-link-title attribute
-                start = node.textContent.indexOf(pages[l])
-                end = node.textContent.indexOf(pages[l]) + pages[l].length
+                start = node.textContent.toLowerCase().indexOf(pages[l].toLowerCase())
+                end = start + pages[l].length
                 beforeLinkText = node.textContent.slice(0, start)
+                matchingWord = node.textContent.slice(start)
+                matchingWord = matchingWord.substr(0, matchingWord.indexOf(" "))
+                console.log(matchingWord)
+                linkText = node.textContent.slice(start, end)
                 afterLinkText = node.textContent.slice(end)
                 // truncate existing text node
                 node.textContent = beforeLinkText
                 // create span with page name
                 matchSpan = document.createElement("span")
                 matchSpan.setAttribute("recommend", "underline")
-                matchSpan.classList.add("underline")
-                matchSpan.innerText = pages[l]
+                if (linkText != pages[l]) {
+                    matchSpan.classList.add("fuzzy")
+                }
+                matchSpan.innerText = linkText
                 // add that span after the text node
                 node.parentNode.insertBefore(matchSpan, node.nextSibling)
                 // create a text node with the remainder text
@@ -97,7 +105,8 @@ function addUnderlineSpanWrapper(node, pages) {
     }
     return false
 }
-  
+
+setTimeout(createButton, 10000)
 function createButton() {
       var spanOne = document.createElement('span');
       spanOne.classList.add('bp3-popover-wrapper');
@@ -112,5 +121,3 @@ function createButton() {
       roamTopbar[0].childNodes[0].appendChild(spanOne);
       outboundUnlinkedRefs.onclick = traceBlocksOnPage;
 }
-  
-createButton()
