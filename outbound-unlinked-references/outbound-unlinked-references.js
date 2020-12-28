@@ -8,6 +8,21 @@ function getAllPages() {
     return pageNames
 }
 
+function pageTaggedInParent(node, page) {
+    parent = node.parentElement
+    while (parent.classList.contains("rm-level-0") == false) {
+        parent = parent.parentElement
+        if (parent.hasAttribute("data-page-links")) {
+            linkedPages = JSON.parse(parent.getAttribute("data-page-links"))
+            console.log(linkedPages)
+            if (linkedPages.includes(page)) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 function lookForMatchingBlocks(blocks, pages) {
     for (i = 0; i < blocks.length; i++) {
         // all blocks only have 1 top level child node, a span.
@@ -89,6 +104,10 @@ function addUnderlineSpanWrapper(node, pages) {
                 if ((firstCharAfterMatch != " " && end != node.textContent.length) || (firstCharBeforeMatch != " " && start != 0)) {
                     matchSpan.classList.add("partial-word-match")
                 }
+                if (pageTaggedInParent(node, pages[l]) == true) {
+                    console.log(node, pages[l])
+                    matchSpan.classList.add("redundant-word-match")
+                }
                 matchSpan.innerText = linkText
                 // truncate existing text node
                 node.textContent = beforeLinkText
@@ -103,6 +122,7 @@ function addUnderlineSpanWrapper(node, pages) {
         }
     }
     catch (err) {
+        console.log(err)
         return false
     }
     return false
