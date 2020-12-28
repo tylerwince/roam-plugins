@@ -22,14 +22,14 @@ function pageTaggedInParent(node, page) {
     return false
 }
 
-function lookForMatchingBlocks(blocks, pages) {
+function findTargetNodes(blocks, pages) {
     for (i = 0; i < blocks.length; i++) {
         // all blocks only have 1 top level child node, a span.
         // skip to the second level of children
         for (j = 0; j < blocks[i].childNodes[0].childNodes.length; j++) {
             node = blocks[i].childNodes[0].childNodes[j];
             if (node.nodeType == 3) { // only text, no more childrens
-                if (addUnderlineSpanWrapper(node, pages) == true) {
+                if (spanWrapper(node, pages) == true) {
                     return true
                 }
                 continue
@@ -44,7 +44,7 @@ function lookForMatchingBlocks(blocks, pages) {
                 if (node.hasChildNodes()) {
                     for (k = 0; k < node.childNodes.length; k++) {
                         if (node.childNodes[k].nodeType == 3) { // only text, no more childrens
-                            if (addUnderlineSpanWrapper(node.childNodes[k])) {
+                            if (spanWrapper(node.childNodes[k])) {
                                 return true
                             }
                             continue
@@ -65,7 +65,7 @@ function lookForMatchingBlocks(blocks, pages) {
     return false
 }
 
-function traceBlocksOnPage() {
+function unlinkFinder() {
     if (document.title == "roam/js") {
       console.log("DON'T DO IT ON THIS PAGE")
       return
@@ -77,11 +77,11 @@ function traceBlocksOnPage() {
 
     do {
         let blocks = document.getElementsByClassName("roam-block");
-        matchFound = lookForMatchingBlocks(blocks, pages)
+        matchFound = findTargetNodes(blocks, pages)
     } while (matchFound == true)
 }
 
-function addUnderlineSpanWrapper(node, pages) {
+function spanWrapper(node, pages) {
     try {
         for (l = 0; l < pages.length; l++) {
             if (node.textContent.toLowerCase().includes(pages[l].toLowerCase())) {
@@ -96,15 +96,24 @@ function addUnderlineSpanWrapper(node, pages) {
                 afterLinkText = node.textContent.slice(end)
                 // create span with page name
                 matchSpan = document.createElement("span")
+              	matchSpan.classList.add("unlink-finder")
+                matchSpan.style.cssText += "text-decoration: underline; text-decoration-style: dotted;"
+                matchSpan.classList.add("exact-word-match")
                 matchSpan.setAttribute("recommend", "underline")
                 if (linkText != pages[l]) {
                     matchSpan.classList.add("fuzzy-word-match")
+                    matchSpan.classList.remove("exact-word-match")
+                    matchSpan.style.cssText += "text-decoration-color: gray;"
                 }
                 if ((firstCharAfterMatch != " " && end != node.textContent.length) || (firstCharBeforeMatch != " " && start != 0)) {
                     matchSpan.classList.add("partial-word-match")
+                    matchSpan.classList.remove("exact-word-match")
+                  matchSpan.style.cssText += "text-decoration-color: lightgray;"
                 }
                 if (pageTaggedInParent(node, pages[l]) == true) {
                     matchSpan.classList.add("redundant-word-match")
+                    matchSpan.classList.remove("exact-word-match")
+                    matchSpan.style.cssText += "text-decoration-color: transparent;";
                 }
                 matchSpan.innerText = linkText
                 // truncate existing text node
@@ -126,18 +135,19 @@ function addUnderlineSpanWrapper(node, pages) {
     return false
 }
 
-setTimeout(createButton, 10000)
-function createButton() {
+function unlinkFinderButton() {
       var spanOne = document.createElement('span');
       spanOne.classList.add('bp3-popover-wrapper');
+      spanOne.setAttribute("style", "margin-left: 4px;")
       var spanTwo = document.createElement('span');
       spanTwo.classList.add('bp3-popover-target');
       spanOne.appendChild(spanTwo);
-      var outboundUnlinkedRefs = document.createElement('span');
-      outboundUnlinkedRefs.id = 'outboundUnlinkedRefs';
-      outboundUnlinkedRefs.classList.add('bp3-icon-search-around', 'bp3-button', 'bp3-minimal');
-      spanTwo.appendChild(outboundUnlinkedRefs);
+      var unlinkFinderIcon = document.createElement('span');
+      unlinkFinderIcon.id = 'unlinkFinderIcon';
+      unlinkFinderIcon.classList.add('bp3-icon-search-around', 'bp3-button', 'bp3-minimal', 'bp3-small');
+      spanTwo.appendChild(unlinkFinderIcon);
       var roamTopbar = document.getElementsByClassName("roam-topbar");
       roamTopbar[0].childNodes[0].appendChild(spanOne);
-      outboundUnlinkedRefs.onclick = traceBlocksOnPage;
+      unlinkFinderIcon.onclick = unlinkFinder;
 }
+unlinkFinderButton()
