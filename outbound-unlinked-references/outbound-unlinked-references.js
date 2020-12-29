@@ -84,6 +84,9 @@ function unlinkFinder() {
 function spanWrapper(node, pages) {
     try {
         for (l = 0; l < pages.length; l++) {
+            if (pages[l].length < 2) {
+              continue
+            }
             if (node.textContent.toLowerCase().includes(pages[l].toLowerCase())) {
                 // iterate over the childNodes and do stuff on childNodes that 
                 // don't have the data-link-title attribute
@@ -129,7 +132,8 @@ function spanWrapper(node, pages) {
         }
     }
     catch (err) {
-        console.log(err)
+        //console.log(err)
+        //console.log(node)
         return false
     }
     return false
