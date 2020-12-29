@@ -154,4 +154,7 @@ function unlinkFinderButton() {
       roamTopbar[0].childNodes[0].appendChild(spanOne);
       unlinkFinderIcon.onclick = unlinkFinder;
 }
-unlinkFinderButton()
+    
+if (document.getElementById("unlinkFinderIcon") == null) {
+    unlinkFinderButton()
+}
