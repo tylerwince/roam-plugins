@@ -75,10 +75,19 @@ function unlinkFinder() {
     let pages = getAllPages();
     matchFound = false
 
-    do {
-        let blocks = document.getElementsByClassName("roam-block");
-        matchFound = findTargetNodes(blocks, pages)
-    } while (matchFound == true)
+    if (document.getElementById("unlinkFinderIcon").getAttribute("status") == "off") {
+        document.getElementById("unlinkFinderIcon").setAttribute("status", "on")
+        addUnlinkFinderLegend()
+        reAddUnlinkTargets()
+        do {
+            let blocks = document.getElementsByClassName("roam-block");
+            matchFound = findTargetNodes(blocks, pages)
+        } while (matchFound == true)
+    } else {
+        document.getElementById("unlinkFinderIcon").setAttribute("status", "off")
+        removeUnlinkFinderLegend()
+        removeUnlinkTargets()
+    }
 }
 
 function spanWrapper(node, pages) {
@@ -138,6 +147,114 @@ function spanWrapper(node, pages) {
     }
     return false
 }
+      
+function removeUnlinkTargets() {
+    targetNodes = document.getElementsByClassName("unlink-finder")
+    for (i = 0; i < targetNodes.length; i++) {
+        if (targetNodes[i].classList.contains("unlink-finder-legend")) {
+            continue
+        }
+        if (targetNodes[i].classList.contains("exact-word-match")) {
+            targetNodes[i].classList.remove("exact-word-match")
+            targetNodes[i].classList.add("exact-word-match-inactive")
+            targetNodes[i].style.cssText = ""
+        }
+        if (targetNodes[i].classList.contains("fuzzy-word-match")) {
+            targetNodes[i].classList.remove("fuzzy-word-match")
+            targetNodes[i].classList.add("fuzzy-word-match-inactive")
+            targetNodes[i].style.cssText = ""
+        }
+        if (targetNodes[i].classList.contains("partial-word-match")) {
+            targetNodes[i].classList.remove("partial-word-match")
+            targetNodes[i].classList.add("partial-word-match-inactive")
+            targetNodes[i].style.cssText = ""
+        }
+        if (targetNodes[i].classList.contains("redundant-word-match")) {
+            targetNodes[i].classList.remove("redundant-word-match")
+            targetNodes[i].classList.add("redundant-word-match-inactive")
+            targetNodes[i].style.cssText = ""
+        }
+    }
+}
+
+function reAddUnlinkTargets() {
+    targetNodes = document.getElementsByClassName("unlink-finder")
+    for (i = 0; i < targetNodes.length; i++) {
+        if (targetNodes[i].classList.contains("unlink-finder-legend")) {
+            continue
+        }
+        if (targetNodes[i].classList.contains("exact-word-match-inactive")) {
+            targetNodes[i].classList.remove("exact-word-match-inactive")
+            targetNodes[i].classList.add("exact-word-match")
+            targetNodes[i].style.cssText = "text-decoration: underline; text-decoration-style: dotted;"
+        }
+        if (targetNodes[i].classList.contains("fuzzy-word-match-inactive")) {
+            targetNodes[i].classList.remove("fuzzy-word-match-inactive")
+            targetNodes[i].classList.add("fuzzy-word-match")
+            targetNodes[i].style.cssText = "text-decoration: underline; text-decoration-style: dotted; text-decoration-color: gray;"
+        }
+        if (targetNodes[i].classList.contains("partial-word-match-inactive")) {
+            targetNodes[i].classList.remove("partial-word-match-inactive")
+            targetNodes[i].classList.add("partial-word-match")
+            targetNodes[i].style.cssText = "text-decoration: underline; text-decoration-style: dotted; text-decoration-color: lightgray;"
+        }
+        if (targetNodes[i].classList.contains("redundant-word-match-inactive")) {
+            targetNodes[i].classList.remove("redundant-word-match-inactive")
+            targetNodes[i].classList.add("redundant-word-match")
+            targetNodes[i].style.cssText = "text-decoration: underline; text-decoration-style: dotted; text-decoration-color: transparent"
+        }
+    }
+}
+      
+function removeUnlinkFinderLegend() {
+    document.getElementById("unlink-finder-legend").remove()
+}
+      
+function addUnlinkFinderLegend() {
+    if (document.getElementById("unlink-finder-legend") == null) {
+      var outerDiv = document.createElement('div');
+      outerDiv.classList.add('unlink-finder-legend');
+      outerDiv.id = 'unlink-finder-legend';
+      outerDiv.setAttribute("style", "margin-left: 4px;")
+      outerDiv.style.cssText = "border-style: groove;"
+      var LegendKey = document.createElement('span');
+      LegendKey.classList.add('unlink-finder-legend');
+      LegendKey.classList.add('unlink-finder');
+      LegendKey.innerText = "Match Types: "
+      LegendKey.style.cssText = "margin-left: 4px; margin-right: 4px;"
+      var exactWordMatch = document.createElement('span');
+      exactWordMatch.classList.add('unlink-finder-legend');
+      exactWordMatch.classList.add('exact-word-match');
+      exactWordMatch.classList.add('unlink-finder');
+      exactWordMatch.innerText = "Exact"
+      exactWordMatch.style.cssText = "margin-right: 4px; text-decoration: underline; text-decoration-style: dotted;"
+      var fuzzyWordMatch = document.createElement('span');
+      fuzzyWordMatch.classList.add('unlink-finder-legend');
+      fuzzyWordMatch.classList.add('fuzzy-word-match');
+      fuzzyWordMatch.classList.add('unlink-finder');
+      fuzzyWordMatch.innerText = "Fuzzy"
+      fuzzyWordMatch.style.cssText = "margin-right: 4px; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: gray;"
+      var partialWordMatch = document.createElement('span');
+      partialWordMatch.classList.add('unlink-finder-legend');
+      partialWordMatch.classList.add('partial-word-match');
+      partialWordMatch.classList.add('unlink-finder');
+      partialWordMatch.innerText = "Partial"
+      partialWordMatch.style.cssText = "margin-right: 4px; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: lightgray;"
+      var redundantWordMatch = document.createElement('span');
+      redundantWordMatch.classList.add('unlink-finder-legend');
+      redundantWordMatch.classList.add('redundant-word-match');
+      redundantWordMatch.classList.add('unlink-finder');
+      redundantWordMatch.innerText = "Redundant"
+      redundantWordMatch.style.cssText = "margin-right: 4px; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: transparent;"
+      outerDiv.appendChild(LegendKey);
+      outerDiv.appendChild(exactWordMatch);
+      outerDiv.appendChild(fuzzyWordMatch);
+      outerDiv.appendChild(partialWordMatch);
+      outerDiv.appendChild(redundantWordMatch);
+      var roamTopbar = document.getElementsByClassName("roam-topbar");
+      roamTopbar[0].childNodes[0].insertBefore(outerDiv, roamTopbar[0].childNodes[0].childNodes[2]);
+    }
+}
 
 function unlinkFinderButton() {
       var spanOne = document.createElement('span');
@@ -148,6 +265,7 @@ function unlinkFinderButton() {
       spanOne.appendChild(spanTwo);
       var unlinkFinderIcon = document.createElement('span');
       unlinkFinderIcon.id = 'unlinkFinderIcon';
+      unlinkFinderIcon.setAttribute("status", "off")
       unlinkFinderIcon.classList.add('bp3-icon-search-around', 'bp3-button', 'bp3-minimal', 'bp3-small');
       spanTwo.appendChild(unlinkFinderIcon);
       var roamTopbar = document.getElementsByClassName("roam-topbar");
