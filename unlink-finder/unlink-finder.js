@@ -112,6 +112,23 @@ function pageTaggedInParent(node, page) {
     return false;
 };
 
+// For adding the highlights on page change
+history.pushState = ( f => function pushState(){
+    var ret = f.apply(this, arguments);
+    window.dispatchEvent(new Event('pushstate'));
+    window.dispatchEvent(new Event('locationchange'));
+    return ret;
+})(history.pushState);
+history.replaceState = ( f => function replaceState(){
+    var ret = f.apply(this, arguments);
+    window.dispatchEvent(new Event('replacestate'));
+    window.dispatchEvent(new Event('locationchange'));
+    return ret;
+})(history.replaceState);
+window.addEventListener('popstate',()=>{
+    window.dispatchEvent(new Event('locationchange'))
+});
+
 function findTargetNodes(blocks, pages, aliases) {
     matched = false;
     loop1:
@@ -196,11 +213,13 @@ function unlinkFinder() {
             matchFound = findTargetNodes(blocks, unlinkFinderPages, unlinkFinderAliases);
         } while (matchFound == true);
         document.addEventListener("blur", runUnlinkFinder, true);
+        window.addEventListener("locationchange", runUnlinkFinder, true);
     } else {
         document.getElementById("unlink-finder-icon").setAttribute("status", "off");
         removeUnlinkFinderLegend();
         removeUnlinkTargets();
         document.removeEventListener("blur", runUnlinkFinder, true);
+        window.removeEventListener("locationchange", runUnlinkFinder, true);
     };
 };
 
