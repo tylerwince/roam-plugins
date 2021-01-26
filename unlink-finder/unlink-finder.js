@@ -422,7 +422,7 @@ function addUnlinkFinderLegend() {
         unlinkFinderLegend.appendChild(partialWordMatch);
         unlinkFinderLegend.appendChild(redundantWordMatch);
         var roamTopbar = document.getElementsByClassName("roam-topbar");
-        roamTopbar[0].childNodes[0].insertBefore(unlinkFinderLegend, roamTopbar[0].childNodes[0].childNodes[2]);
+        roamTopbar[0].childNodes[0].childNodes[0].insertBefore(unlinkFinderLegend, roamTopbar[0].childNodes[0].childNodes[0].childNodes[2]);
     }
 }
 
