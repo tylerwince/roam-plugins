@@ -10,6 +10,16 @@ function getAllPages() {
     return pageNames;
 };
 
+function removeUnlinkSpans(el) {
+    for (i = 0; i < el.childNodes.length; i++) {
+        if (el.childNodes[i].nodeType == 1 && el.childNodes[i].classList.contains("unlink-finder")) {
+            el.childNodes[i].insertAdjacentText("afterend", el.childNodes[i].innerText)
+            el.childNodes[i].remove()
+        }
+    }
+    el.normalize()
+}
+
 function getAllAliases() {
     aliasMap = new Map();
 
@@ -113,19 +123,19 @@ function pageTaggedInParent(node, page) {
 };
 
 // For adding the highlights on page change
-history.pushState = ( f => function pushState(){
+history.pushState = (f => function pushState() {
     var ret = f.apply(this, arguments);
     window.dispatchEvent(new Event('pushstate'));
     window.dispatchEvent(new Event('locationchange'));
     return ret;
 })(history.pushState);
-history.replaceState = ( f => function replaceState(){
+history.replaceState = (f => function replaceState() {
     var ret = f.apply(this, arguments);
     window.dispatchEvent(new Event('replacestate'));
     window.dispatchEvent(new Event('locationchange'));
     return ret;
 })(history.replaceState);
-window.addEventListener('popstate',()=>{
+window.addEventListener('popstate', () => {
     window.dispatchEvent(new Event('locationchange'))
 });
 
@@ -184,6 +194,7 @@ function runUnlinkFinder() {
             matchFound = findTargetNodes(blocks, unlinkFinderPages, unlinkFinderAliases);
         } while (matchFound == true);
     }, 1000);
+    addContextMenuListener();
 };
 
 function unlinkFinder() {
@@ -214,6 +225,7 @@ function unlinkFinder() {
         } while (matchFound == true);
         document.addEventListener("blur", runUnlinkFinder, true);
         window.addEventListener("locationchange", runUnlinkFinder, true);
+        addContextMenuListener()
     } else {
         document.getElementById("unlink-finder-icon").setAttribute("status", "off");
         removeUnlinkFinderLegend();
@@ -280,10 +292,10 @@ function spanWrapper(node, pages, aliases) {
                 matchSpan.style.cssText += `background: ${exactWordMatchStyle}`;
                 matchSpan.classList.add("exact-word-match");
                 matchSpan.setAttribute("recommend", "underline");
+                matchSpan.setAttribute("data-text", pages[l]);
                 if (linkText != pages[l]) {
                     matchSpan.classList.add("fuzzy-word-match");
                     matchSpan.classList.remove("exact-word-match");
-                    matchSpan.setAttribute("data-text", pages[l]);
                     matchSpan.style.cssText += `position:relative; background: ${fuzzyWordMatchStyle}`;
                 };
                 if ((![".", " ", ",", "-", "!", "?", "_", "/", ":", ";", "'", '"', "@", ")", "(", "{", "}", "[", "]", "^", "*", "#"].includes(firstCharAfterMatch) && end != node.textContent.length) ||
@@ -383,6 +395,183 @@ function reAddUnlinkTargets() {
     };
 };
 
+unlinkFinderElementToLink = null;
+unlinkFinderBackdrop = null;
+unlinkFinderMenu = null;
+unlinkFinderMenuOptions = null;
+unlinkFinderMenuVisible = false;
+
+// for some reason this is running multiple times on each click
+// first link = 1 time
+// second link = 2 times
+// etc
+// this causes the menu to not be displayed for some reason.
+// it is because I am adding multiple event listeners to each element!!
+const toggleMenu = command => {
+    // console.log("TOGGLING MENU: " + command)
+    unlinkFinderMenu.style.display = command === "show" ? "block" : "none";
+    unlinkFinderBackdrop.style.display = command === "show" ? "block" : "none";
+    if (command == "show") {
+        unlinkFinderMenuVisible = true
+    } else {
+        unlinkFinderMenuVisible = false
+    }
+};
+
+const setPosition = ({ top, left }) => {
+    unlinkFinderMenu.style.left = `${left}px`;
+    unlinkFinderMenu.style.top = `${top}px`;
+    toggleMenu("show");
+};
+
+function addContextMenuListener() {
+    var unlinkFinderMatches = document.querySelectorAll(".unlink-finder");
+    for (var i = 0, len = unlinkFinderMatches.length; i < len; i++) {
+        var match = unlinkFinderMatches[i];
+        match.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+            const origin = {
+                left: e.pageX,
+                top: e.pageY
+            };
+            setPosition(origin);
+            unlinkFinderElementToLink = e.target;
+            return false;
+        });
+    }
+}
+
+function setupUnlinkFinderContextMenu() {
+
+    window.addEventListener("click", e => {
+        if (unlinkFinderMenuVisible) { toggleMenu("hide") };
+    });
+
+    for (var i = 0; i < unlinkFinderMenuOptions.length; i++) {
+        unlinkFinderMenuOptions[i].addEventListener("click", e => {
+            if (e.target.innerHTML == "Link using [[Reference]]") {
+                linkUsingReference(unlinkFinderElementToLink);
+            }
+            if (e.target.innerHTML == "Link using [Alias]([[Reference]])") {
+                linkUsingAlias(unlinkFinderElementToLink);
+            }
+        });
+    }
+}
+
+function countOfPreviousMatches(el) {
+    let matchedWord = el.innerText;
+    let count = 1;
+    while (el.previousSibling != null) {
+        if (el.previousSibling.textContent.includes(matchedWord)) {
+            count += 1;
+        };
+        el = el.previousSibling;
+    };
+    return count;
+}
+
+
+function replaceMatchedWord(count, text, matchedWord, futureWord) {
+    var t = 0;
+    var re = new RegExp(matchedWord, "g");
+    return text.replace(re, function (match) {
+        t++;
+        return (t === count) ? futureWord : match;
+    });
+}
+
+
+// TODO: get the right matched item if there are many matches of the same element in the block
+function linkUsingReference(el) {
+    let actualPageName = el.getAttribute("data-text");
+    let matchedWord = el.innerText;
+    let futureWord = "[[" + actualPageName + "]]"
+    locationOfMatchedWord = countOfPreviousMatches(el);
+    blockUid = el.parentNode.parentNode.id.slice(-9);
+    let currentText = window.roamAlphaAPI.q(`[:find (pull ?e [:block/string]) :where [?e :block/uid "${blockUid}"]]`)[0][0].string
+    let futureText = replaceMatchedWord(locationOfMatchedWord, currentText, matchedWord, futureWord)
+    removeUnlinkSpans(el.parentNode);
+    window.roamAlphaAPI.updateBlock({ "block": { "uid": blockUid, "string": futureText } });
+}
+
+function linkUsingAlias(el) {
+    let actualPageName = el.getAttribute("data-text");
+    let matchedWord = el.innerText;
+    let futureWord = "[" + matchedWord + "]([[" + actualPageName + "]])"
+    locationOfMatchedWord = countOfPreviousMatches(el);
+    blockUid = el.parentNode.parentNode.id.slice(-9);
+    let currentText = window.roamAlphaAPI.q(`[:find (pull ?e [:block/string]) :where [?e :block/uid "${blockUid}"]]`)[0][0].string
+    let futureText = replaceMatchedWord(locationOfMatchedWord, currentText, matchedWord, futureWord)
+    removeUnlinkSpans(el.parentNode);
+    window.roamAlphaAPI.updateBlock({ "block": { "uid": blockUid, "string": futureText } });
+}
+
+function createCustomContextMenu() {
+    var portalDiv = document.createElement("div");
+    portalDiv.classList.add("bp3-portal");
+    var overlayDiv = document.createElement("div");
+    overlayDiv.classList.add("bp3-overlay");
+    overlayDiv.classList.add("bp3-overlay-open")
+    var backdropDiv = document.createElement("div");
+    backdropDiv.classList.add("bp3-overlay-backdrop");
+    backdropDiv.classList.add("bp3-popover-backdrop");
+    backdropDiv.classList.add("bp3-popover-appear-done");
+    backdropDiv.classList.add("bp3-popover-enter-done");
+    backdropDiv.classList.add("unlink-finder-context-backdrop");
+    backdropDiv.style.cssText = `display: none;`;
+    var containerDiv = document.createElement("div");
+    containerDiv.classList.add("bp3-transition-container");
+    containerDiv.classList.add("bp3-popover-appear-done");
+    containerDiv.classList.add("bp3-popover-enter-done");
+    containerDiv.classList.add("unlink-finder-context-menu");
+    containerDiv.style.cssText = `display: none; width: auto; position: fixed;`;
+    var popoverDiv = document.createElement("div");
+    popoverDiv.classList.add("bp3-popover");
+    popoverDiv.classList.add("bp3-minimal");
+    var popoverContentDiv = document.createElement("div");
+    popoverContentDiv.classList.add("bp3-popover-content");
+    var blankDiv = document.createElement("div");
+    var menuDiv = document.createElement("ul");
+    menuDiv.classList.add("bp3-text-small");
+    menuDiv.classList.add("bp3-menu");
+    var referenceLink = document.createElement("li");
+    referenceLink.classList.add("unlink-finder-context-menu-option");
+    var referenceLinkAction = document.createElement("a");
+    referenceLinkAction.classList.add("bp3-menu-item");
+    referenceLinkAction.classList.add("bp3-popover-dismiss");
+    var referenceLinkText = document.createElement("div");
+    referenceLinkText.classList.add("bp3-text-overflow-ellipsis");
+    referenceLinkText.classList.add("bp3-fill");
+    referenceLinkText.innerText = "Link using [[Reference]]";
+
+    var aliasLink = document.createElement("li");
+    aliasLink.classList.add("unlink-finder-context-menu-option")
+    var aliasLinkAction = document.createElement("a");
+    aliasLinkAction.classList.add("bp3-menu-item")
+    aliasLinkAction.classList.add("bp3-popover-dismiss")
+    var aliasLinkText = document.createElement("div");
+    aliasLinkText.classList.add("bp3-text-overflow-ellipsis")
+    aliasLinkText.classList.add("bp3-fill")
+    aliasLinkText.innerText = "Link using [Alias]([[Reference]])"
+
+    aliasLinkAction.appendChild(aliasLinkText);
+    aliasLink.appendChild(aliasLinkAction);
+    referenceLinkAction.appendChild(referenceLinkText);
+    referenceLink.appendChild(referenceLinkAction);
+    menuDiv.appendChild(referenceLink);
+    menuDiv.appendChild(aliasLink);
+    blankDiv.appendChild(menuDiv);
+    popoverContentDiv.appendChild(blankDiv);
+    popoverDiv.appendChild(popoverContentDiv);
+    containerDiv.appendChild(popoverDiv);
+    overlayDiv.appendChild(backdropDiv);
+    overlayDiv.appendChild(containerDiv);
+    portalDiv.appendChild(overlayDiv);
+
+    document.getElementById("app").appendChild(portalDiv);
+}
+
 function removeUnlinkFinderLegend() {
     document.getElementById("unlink-finder-legend").remove();
 };
@@ -452,4 +641,9 @@ if (document.getElementById("unlink-finder-icon") == null) {
     partialWordMatchStyle = "rgba(229, 233, 236, 1.0)";
     redundantWordMatchStyle = "rgba(168, 42, 42, 0.4)";
     unlinkFinderButton();
+    createCustomContextMenu();
+    unlinkFinderBackdrop = document.querySelector(".unlink-finder-context-backdrop");
+    unlinkFinderMenu = document.querySelector(".unlink-finder-context-menu");
+    unlinkFinderMenuOptions = document.querySelectorAll(".unlink-finder-context-menu-option");
+    setupUnlinkFinderContextMenu();
 };
